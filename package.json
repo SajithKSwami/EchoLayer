@@ -6,8 +6,16 @@
   "engines": {
     "node": ">=22.5.0"
   },
+  "bin": {
+    "echolayer-mcp-server": "mcp/server.mjs"
+  },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "start:mcp": "node mcp/server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
   },
   "license": "MIT",
   "repository": {

@@ -32,7 +32,36 @@ It is a synthesis of four works:
 Try it: `node recall/cli.mjs "deploy error"`
 
 Remaining: live model adapters (`claude-haiku-4-5` + Google `text-embedding-004`) and the
-`PostToolUse`/`Stop` hook + MCP wrappers.
+`PostToolUse`/`Stop` capture hooks. The **MCP server is built** (see below).
+
+## Use in Claude Code
+
+EchoLayer ships an MCP server (`mcp/server.mjs`) exposing three tools: `echolayer_recall`,
+`echolayer_remember`, `echolayer_stats`. On first run it seeds a few demo memories so recall
+returns something immediately. (It currently uses a local keyword fake embedder; swap in the
+live embedder later without touching the server.)
+
+```sh
+npm install            # one-time: installs the MCP SDK
+```
+
+Register it (user scope, available in every session):
+
+```sh
+claude mcp add echolayer --scope user -- node C:\EchoLayer\mcp\server.mjs
+```
+
+Or add it manually to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "echolayer": { "command": "node", "args": ["C:\\EchoLayer\\mcp\\server.mjs"] }
+  }
+}
+```
+
+The DB defaults to `echolayer.db` in the repo; override with the `ECHOLAYER_DB` env var.
 
 ## Requirements
 

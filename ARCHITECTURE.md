@@ -20,9 +20,9 @@ Synthesis of four sources (the latter two are the primary papers CoALA generaliz
   reflection; outcome/reward signals that inform salience. Drives §5 and §6.
 
 Status: **all 7 layers implemented and tested on fakes** (50 tests, zero deps, zero API spend).
-What remains is live wiring only: the real D13/D14 model adapters and the `PostToolUse`/`Stop`
-hook + MCP wrappers. This document is the contract; the Decisions Log below records choices
-made as architect.
+The MCP server is built (stdio, `@modelcontextprotocol/sdk`). What remains is live wiring only:
+the real D13/D14 model adapters and the `PostToolUse`/`Stop` capture hooks. This document is
+the contract; the Decisions Log below records choices made as architect.
 
 ---
 
@@ -414,7 +414,8 @@ Build in this order; each is independently testable.
    7 tests. **Done.**
 6. ✅ **`recall/`** — `recall()` embeds the task, runs the scorer, bumps `last_accessed_at`,
    returns the composed bundle. Fake keyword embedder + runnable `cli.mjs` demo. 4 tests.
-   **Done** (proven on fakes; MCP wrapper still to add).
+   **Done.** MCP server (`mcp/server.mjs`, tools: `echolayer_recall`/`remember`/`stats`) built
+   on the official `@modelcontextprotocol/sdk` (stdio); smoke-tested over real JSON-RPC.
 7. ✅ **`prune/`** — `prune()` removes cold episodes (low importance + old + not re-accessed),
    always retains reflections, audits the count. 6 tests. **Done.**
 

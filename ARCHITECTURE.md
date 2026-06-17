@@ -20,9 +20,10 @@ Synthesis of four sources (the latter two are the primary papers CoALA generaliz
   reflection; outcome/reward signals that inform salience. Drives §5 and §6.
 
 Status: **all 7 layers implemented and tested on fakes** (50 tests, zero deps, zero API spend).
-The MCP server is built (stdio, `@modelcontextprotocol/sdk`). What remains is live wiring only:
-the real D13/D14 model adapters and the `PostToolUse`/`Stop` capture hooks. This document is
-the contract; the Decisions Log below records choices made as architect.
+The MCP server is built (stdio, `@modelcontextprotocol/sdk`) and the live **embedder** (D14,
+Google `text-embedding-004`) is wired with a fake fallback. What remains: the D13 rating adapter
+(`claude-haiku-4-5`) and the `PostToolUse`/`Stop` capture hooks. This document is the contract;
+the Decisions Log below records choices made as architect.
 
 ---
 
@@ -419,11 +420,19 @@ Build in this order; each is independently testable.
 7. ✅ **`prune/`** — `prune()` removes cold episodes (low importance + old + not re-accessed),
    always retains reflections, audits the count. 6 tests. **Done.**
 
-**Live wiring deliberately deferred.** Everything above is proven with fakes and has spent
-**zero API tokens**. The only outward-facing/cost step — the real D13/D14 adapters
-(`claude-haiku-4-5` rating, Google `text-embedding-004`) — is isolated behind the injected
-interfaces and will be wired last, after the cognition layers (reflect/recall/prune) are
-complete and the model ids are confirmed against the claude-api reference.
+**Live wiring — embedder DONE, rating + hooks remain.**
+
+- ✅ **D14 embedder** — `embedders/google.mjs` (`text-embedding-004`, 768-dim) behind the
+  injected interface, with a query/document `taskType` split and a fake fallback when no key is
+  set (`embedders/index.mjs`). 8 offline tests via an injected client. The MCP server selects
+  live-vs-fake at startup and loads a repo-local `.env` (Node built-in `loadEnvFile`, no dotenv
+  dep). **Live API call not yet exercised** — requires a `GOOGLE_API_KEY` in `.env`.
+- ⏳ **D13 rating adapter** — `claude-haiku-4-5` for flush importance/NL/outcome (confirm the
+  model id against the claude-api reference before hardcoding).
+- ⏳ **Capture hooks** — `PostToolUse`/`Stop` stdin wrappers feeding real activity in.
+
+Note: live (768-dim) and fake (10-dim) vectors are incompatible by length; switching embedders
+means starting a fresh DB. The server skips demo-seeding in live mode for this reason.
 
 ---
 

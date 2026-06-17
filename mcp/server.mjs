@@ -11,10 +11,18 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { openStore } from '../store/repo.mjs';
 import { recall } from '../recall/recall.mjs';
-import { keywordEmbedder, keywordEmbed } from '../recall/fake-embedder.mjs';
+import { keywordEmbed } from '../recall/fake-embedder.mjs';
+import { getEmbedder } from '../embedders/index.mjs';
 
-const DB_PATH =
-  process.env.ECHOLAYER_DB || join(dirname(fileURLToPath(import.meta.url)), '..', 'echolayer.db');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const DB_PATH = process.env.ECHOLAYER_DB || join(ROOT, 'echolayer.db');
+
+// Load a repo-local .env (Node built-in; no dotenv dependency). Ignore if absent.
+try {
+  process.loadEnvFile(join(ROOT, '.env'));
+} catch {
+  /* no .env file — rely on the ambient environment */
+}
 
 function seedIfEmpty(repo) {
   if (repo.db.prepare('SELECT COUNT(*) AS n FROM episodes').get().n > 0) return;
@@ -124,10 +132,14 @@ function round(n) {
 
 async function main() {
   const repo = openStore(DB_PATH);
-  seedIfEmpty(repo);
-  const server = buildServer(repo, { embedder: keywordEmbedder });
+  const { embedder, live, why } = getEmbedder();
+  // Only seed demo data in fake mode — live mode starts clean (avoids spend + dim mismatch).
+  if (!live) seedIfEmpty(repo);
+  const server = buildServer(repo, { embedder });
   await server.connect(new StdioServerTransport());
-  process.stderr.write(`echolayer-mcp-server ready (db: ${DB_PATH})\n`);
+  process.stderr.write(
+    `echolayer-mcp-server ready (db: ${DB_PATH}; embedder: ${live ? 'google text-embedding-004' : 'fake keyword'} — ${why})\n`,
+  );
 }
 
 main().catch((e) => {

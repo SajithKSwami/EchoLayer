@@ -9,7 +9,7 @@ import { retrieve } from '../retrieval/score.mjs';
 import CONFIG from '../config.mjs';
 
 export async function recall(repo, { embedder }, queryText, opts = {}) {
-  const [queryEmbedding] = await embedder.embedBatch([queryText]);
+  const [queryEmbedding] = await embedder.embedBatch([queryText], { taskType: 'RETRIEVAL_QUERY' });
   const now = opts.now ?? new Date();
 
   const shortTerm = repo.peekBuffer(opts.shortTermLimit ?? 20);

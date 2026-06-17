@@ -1,0 +1,28 @@
+{
+  "name": "echolayer",
+  "version": "0.1.0",
+  "description": "Long-term memory for Claude agents: per-tool-call capture, episodic stream, reflection trees, and tri-metric retrieval. A synthesis of CoALA, Generative Agents, ReAct, and Reflexion.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SajithKSwami/EchoLayer.git"
+  },
+  "keywords": [
+    "claude",
+    "agent",
+    "memory",
+    "coala",
+    "generative-agents",
+    "react",
+    "reflexion",
+    "llm",
+    "sqlite"
+  ]
+}

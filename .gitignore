@@ -141,3 +141,16 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# ── EchoLayer: captured memory data (NEVER commit) ────────────────────────────
+# These hold real captured Claude activity — tool inputs/outputs, reasoning traces.
+# Secret-scrubbing runs in the hot path, but treat every DB as sensitive regardless.
+*.db
+*.db-wal          # SQLite WAL-mode sidecars (journal_mode = WAL)
+*.db-shm
+*.sqlite
+*.sqlite3
+memory.db*
+data/
+*.jsonl           # raw transcript exports / dumps
+!.env.example     # keep the example env (real .env already ignored above)

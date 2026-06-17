@@ -84,6 +84,10 @@ export function openStore(path = ':memory:') {
     recentEpisodes(limit = 50) {
       return stmts.recentEpisodes.all(limit);
     },
+    // Read-only view of unflushed events (short-term trajectory) — does NOT mark them flushed.
+    peekBuffer(limit = 20) {
+      return stmts.unflushed.all(limit);
+    },
     bufferSize(sessionId) {
       return stmts.bufferSize.get(sessionId).n;
     },

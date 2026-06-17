@@ -410,9 +410,10 @@ Build in this order; each is independently testable.
 5. ✅ **`reflect/`** — `detectCorrectiveTrigger` (pure heuristic) + `reflectThematic`
    (`Σ imp > θ`, resets accumulator) + `reflectCorrective` (loop/failure-run/inefficiency).
    7 tests. **Done.**
-6. ⏳ **`recall/`** — the interface Claude queries (MCP tool or CLI) wrapping L4's composed
-   bundle. **Next.**
-7. **`prune/`** — forgetting job (§8).
+6. ✅ **`recall/`** — `recall()` embeds the task, runs the scorer, bumps `last_accessed_at`,
+   returns the composed bundle. Fake keyword embedder + runnable `cli.mjs` demo. 4 tests.
+   **Done** (proven on fakes; MCP wrapper still to add).
+7. ⏳ **`prune/`** — forgetting job (§8). **Next.**
 
 **Live wiring deliberately deferred.** Everything above is proven with fakes and has spent
 **zero API tokens**. The only outward-facing/cost step — the real D13/D14 adapters

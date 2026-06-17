@@ -407,9 +407,11 @@ Build in this order; each is independently testable.
 4. ✅ **`flush/`** — `flushPage` over injected `llm`/`embedder` (D13/D14): batched rate + NL +
    outcome + embed → episodes, advances the reflection accumulator. 5 tests; proves the full
    **L0→L2→L4** path with fakes. **Done** (live adapters deferred — see below).
-5. ⏳ **`reflect/`** — thematic (`Σ imp > θ`) + corrective (heuristic-triggered) cycles (§5).
-   **Next.** Still 0 live cost — testable with the same injected `llm`.
-6. **`recall/`** — the interface Claude queries (MCP tool or CLI) wrapping L4's composed bundle.
+5. ✅ **`reflect/`** — `detectCorrectiveTrigger` (pure heuristic) + `reflectThematic`
+   (`Σ imp > θ`, resets accumulator) + `reflectCorrective` (loop/failure-run/inefficiency).
+   7 tests. **Done.**
+6. ⏳ **`recall/`** — the interface Claude queries (MCP tool or CLI) wrapping L4's composed
+   bundle. **Next.**
 7. **`prune/`** — forgetting job (§8).
 
 **Live wiring deliberately deferred.** Everything above is proven with fakes and has spent

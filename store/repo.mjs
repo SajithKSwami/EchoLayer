@@ -61,6 +61,10 @@ export function openStore(path = ':memory:') {
       `INSERT INTO meta (key, value) VALUES (?, ?)
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     ),
+    recentEpisodes: db.prepare(
+      `SELECT id, created_at, act_type, text, importance, outcome
+       FROM episodes ORDER BY created_at DESC LIMIT ?`,
+    ),
   };
 
   return {
@@ -76,6 +80,9 @@ export function openStore(path = ':memory:') {
         e.transcript_uuid ?? null,
       );
       return id;
+    },
+    recentEpisodes(limit = 50) {
+      return stmts.recentEpisodes.all(limit);
     },
     bufferSize(sessionId) {
       return stmts.bufferSize.get(sessionId).n;

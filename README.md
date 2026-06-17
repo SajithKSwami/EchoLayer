@@ -16,17 +16,23 @@ It is a synthesis of four works:
 
 ## Status
 
-Building. **4 of 7 layers** implemented and tested — 33 tests, **zero dependencies**, zero API
-cost so far (cognition is exercised with injected fakes).
+**All 7 layers implemented and tested** — 50 tests, **zero dependencies**, zero API cost
+(cognition is exercised with injected fakes).
 
 | Layer | Module | Responsibility |
 |-------|--------|----------------|
-| L4 | `retrieval/` | tri-metric scorer + composed `{short_term, thematic, corrective≤Ω}` recall |
-| L1–L3 | `store/` | `node:sqlite` schema, Float32 vector codec, repository |
 | L0 | `capture/` | event build + **secret-scrub** + flush-trigger |
 | L1→L2 | `flush/` | batched rate + embed → episodes (injected `llm`/`embedder`) |
+| L1–L3 | `store/` | `node:sqlite` schema, Float32 vector codec, repository |
+| L3 | `reflect/` | thematic (Σ-importance) + corrective (loop/failure) reflections |
+| L4 | `retrieval/` | tri-metric scorer + composed `{short_term, thematic, corrective≤Ω}` recall |
+| L4 | `recall/` | query surface: embed → retrieve → bump last-accessed (CLI demo included) |
+| — | `prune/` | forgetting: drop cold episodes, always keep reflections |
 
-Remaining: `reflect/`, `recall/` (the MCP/CLI surface), `prune/`, and the live model adapters.
+Try it: `node recall/cli.mjs "deploy error"`
+
+Remaining: live model adapters (`claude-haiku-4-5` + Google `text-embedding-004`) and the
+`PostToolUse`/`Stop` hook + MCP wrappers.
 
 ## Requirements
 

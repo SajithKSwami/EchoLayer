@@ -65,6 +65,10 @@ export function openStore(path = ':memory:') {
       `SELECT id, created_at, act_type, text, importance, outcome
        FROM episodes ORDER BY created_at DESC LIMIT ?`,
     ),
+    pruneEpisodes: db.prepare(
+      `DELETE FROM episodes
+       WHERE importance < ? AND created_at < ? AND last_accessed_at < ?`,
+    ),
   };
 
   return {
@@ -87,6 +91,11 @@ export function openStore(path = ':memory:') {
     // Read-only view of unflushed events (short-term trajectory) — does NOT mark them flushed.
     peekBuffer(limit = 20) {
       return stmts.unflushed.all(limit);
+    },
+    // Delete cold episodes: low importance AND old AND not accessed since `beforeISO`.
+    // Reflections are never touched. Returns the number of rows removed.
+    pruneColdEpisodes(importanceFloor, beforeISO) {
+      return stmts.pruneEpisodes.run(importanceFloor, beforeISO, beforeISO).changes;
     },
     bufferSize(sessionId) {
       return stmts.bufferSize.get(sessionId).n;

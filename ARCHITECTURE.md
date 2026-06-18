@@ -428,8 +428,11 @@ Build in this order; each is independently testable.
   live-vs-fake at startup and loads a repo-local `.env` (Node built-in `loadEnvFile`, no dotenv
   dep). **Live-verified** against a real key: 3072-dim vectors, semantic ranking confirmed
   (query "deployment failure" → 0.79 vs 0.57 to an unrelated memory).
-- ⏳ **D13 rating adapter** — `claude-haiku-4-5` for flush importance/NL/outcome (confirm the
-  model id against the claude-api reference before hardcoding).
+- ◑ **D13 rating adapter** — `llm/claude.mjs` (`claude-haiku-4-5`, model id confirmed via the
+  claude-api skill) behind the injected `llm` interface; factory `getRater()` (Claude-or-fake);
+  defensive JSON parsing; 9 offline tests. **Live auth confirmed but the Anthropic account has
+  0 API credits** — the live rating call is pending credits (or a swap to a Gemini rater on the
+  existing Google key).
 - ⏳ **Capture hooks** — `PostToolUse`/`Stop` stdin wrappers feeding real activity in.
 
 Note: live (768-dim) and fake (10-dim) vectors are incompatible by length; switching embedders

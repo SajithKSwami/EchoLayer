@@ -16,6 +16,7 @@ const DB_PATH = process.env.ECHOLAYER_DB || join(ROOT, 'echolayer.db');
 
 const { openStore } = await import('../store/repo.mjs');
 const { flushPage } = await import('../flush/flush.mjs');
+const { reflectThematic, reflectCorrective } = await import('../reflect/reflect.mjs');
 const { getRater } = await import('../llm/index.mjs');
 const { getEmbedder } = await import('../embedders/index.mjs');
 
@@ -32,8 +33,17 @@ try {
     res = await flushPage(repo, { llm, embedder });
     total += res.flushed;
   } while (res.flushed > 0);
+
+  // Reflection (self-gating): corrective fires on a loop/failure-run/inefficiency heuristic;
+  // thematic fires only when Σ importance since last reflection crossed θ.
+  const corrective = await reflectCorrective(repo, { llm, embedder });
+  const thematic = await reflectThematic(repo, { llm, embedder });
+
   repo.close();
-  process.stderr.write(`[echolayer-flush] flushed ${total} events (rater: ${provider}, embedder: ${live ? 'live' : 'fake'})\n`);
+  process.stderr.write(
+    `[echolayer-flush] flushed ${total} (rater: ${provider}, embedder: ${live ? 'live' : 'fake'}); ` +
+      `reflect thematic=${thematic.ran ?? false} corrective=${corrective.ran ?? false}\n`,
+  );
 } catch (e) {
   process.stderr.write(`[echolayer-flush] ${e?.stack ?? e}\n`);
 }

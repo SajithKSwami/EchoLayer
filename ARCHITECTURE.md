@@ -437,10 +437,14 @@ Build in this order; each is independently testable.
   auto-takes over once the Anthropic account has credits — its key authenticates but currently
   has 0 credits, so `ECHOLAYER_RATER=gemini` is set to use the working Gemini rater.
 - ✅ **Capture hooks** — `hooks/post-tool-use.mjs` (append-only, hot path, exits 0) and
-  `hooks/stop.mjs` (drains the buffer → rated+embedded episodes at session end). Live-verified
-  end-to-end: 2 tool calls → buffer → Stop-flush → 2 Gemini-rated, live-embedded episodes →
-  recall. Wired project-scoped with an `Edit|Write|Bash|Task` matcher. `busy_timeout` added for
-  multi-process DB access (MCP server + hooks).
+  `hooks/stop.mjs` (drains the buffer → rated+embedded episodes, then runs **reflection** at
+  session end). Live-verified end-to-end: tool calls → buffer → Stop-flush → Gemini-rated,
+  live-embedded episodes → thematic + corrective reflections (with evidence pointers) → recall.
+  Wired project-scoped with an `Edit|Write|Bash|Task` matcher. `busy_timeout` for multi-process
+  DB access (MCP server + hooks).
+- ✅ **Reflection LLM methods + retry** — `reflectThematic`/`reflectCorrective` added to both
+  llm adapters (shared `reflect-util.mjs`); transient-error retry with backoff
+  (`retry.mjs`) wraps every model call so a 503/429 at session end doesn't lose the flush.
 
 Note: live (768-dim) and fake (10-dim) vectors are incompatible by length; switching embedders
 means starting a fresh DB. The server skips demo-seeding in live mode for this reason.

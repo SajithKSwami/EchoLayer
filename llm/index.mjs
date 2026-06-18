@@ -1,21 +1,38 @@
-// Rater selection (D13). Live Claude rater when an Anthropic key is present, else the fake.
+// Rater selection (D13). Order: explicit ECHOLAYER_RATER override, else Claude (Anthropic key)
+// > Gemini (Google key) > fake.
 //
-//   const { llm, live, why } = getRater();
+//   const { llm, live, provider, why } = getRater();
 //
-// Mirrors the embedder factory. The returned `llm` satisfies the interface flush expects
-// (rateBatch). Reflect's reflectThematic/reflectCorrective will be added to the live adapter
-// when reflect is wired to live models.
+// NOTE: construction is offline and does NOT detect Anthropic credit balance — Claude failures
+// surface at call time. If your Anthropic account has no credits, set ECHOLAYER_RATER=gemini to
+// force the (working) Gemini rater; remove it once Claude has credits to auto-prefer Claude.
 
 import { createClaudeRater } from './claude.mjs';
+import { createGeminiRater } from './gemini.mjs';
 import { fakeRater } from './fake-rater.mjs';
 
 export function getRater(env = process.env) {
-  if (!env.ANTHROPIC_API_KEY) {
-    return { llm: fakeRater, live: false, why: 'no ANTHROPIC_API_KEY' };
-  }
+  const forced = (env.ECHOLAYER_RATER || '').toLowerCase();
+  const gkey = env.GOOGLE_API_KEY || env.GEMINI_API_KEY;
+
+  const claude = () =>
+    env.ANTHROPIC_API_KEY
+      ? attempt(() => createClaudeRater({ apiKey: env.ANTHROPIC_API_KEY }), 'claude', 'claude-haiku-4-5')
+      : null;
+  const gemini = () =>
+    gkey ? attempt(() => createGeminiRater({ apiKey: gkey }), 'gemini', 'gemini-2.5-flash') : null;
+  const fake = (why) => ({ llm: fakeRater, live: false, provider: 'fake', why });
+
+  if (forced === 'fake') return fake('forced fake');
+  if (forced === 'claude') return claude() ?? fake('forced claude but no/invalid key');
+  if (forced === 'gemini') return gemini() ?? fake('forced gemini but no/invalid key');
+  return claude() ?? gemini() ?? fake('no ANTHROPIC_API_KEY / GOOGLE_API_KEY');
+}
+
+function attempt(make, provider, why) {
   try {
-    return { llm: createClaudeRater({ apiKey: env.ANTHROPIC_API_KEY }), live: true, why: 'claude-haiku-4-5' };
-  } catch (e) {
-    return { llm: fakeRater, live: false, why: `claude init failed: ${e.message}` };
+    return { llm: make(), live: true, provider, why };
+  } catch {
+    return null;
   }
 }

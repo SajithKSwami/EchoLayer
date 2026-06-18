@@ -46,7 +46,7 @@ Resolved as architect (B-path chosen; see §11). These are now defaults in
 | D10 | Corrective triggers | loop >3× same {action,obs}; or run of `fail`; or >30 actions no-progress | Reflexion heuristics, 0 LLM. |
 | D11 | Prune floor / age | importance < 3 **and** age > 30 d **and** never re-accessed | Forgetting; reflections always retained. |
 | D12 | Capture scope | all tools (denylist configurable, default empty) | Honors "every tool call"; knob exists if volume bites. |
-| D13 | Rating/NL model | **`claude-haiku-4-5`** (batched at flush) | Cheap, fast; batched once per page (§7). Behind an injected `llm` interface. |
+| D13 | Rating/NL model | **`claude-haiku-4-5`**, fallback **`gemini-2.5-flash`** (batched at flush) | Cheap, fast; batched once per page (§7). Provider-flexible behind the injected `llm` interface; `getRater()` picks Claude→Gemini→fake (override via `ECHOLAYER_RATER`). |
 | D14 | Embeddings | **Google `gemini-embedding-001`** (3072-dim) | `@google/generative-ai`. text-embedding-004 turned out 404 on the live key; gemini-embedding-001 is the GA model. Behind an injected `embedder` interface so it's swappable (Voyage/OpenAI) without touching flush logic. |
 
 **Dependency-injection rule:** `flush/` and `reflect/` take `{ llm, embedder }` as parameters.
@@ -428,11 +428,13 @@ Build in this order; each is independently testable.
   live-vs-fake at startup and loads a repo-local `.env` (Node built-in `loadEnvFile`, no dotenv
   dep). **Live-verified** against a real key: 3072-dim vectors, semantic ranking confirmed
   (query "deployment failure" → 0.79 vs 0.57 to an unrelated memory).
-- ◑ **D13 rating adapter** — `llm/claude.mjs` (`claude-haiku-4-5`, model id confirmed via the
-  claude-api skill) behind the injected `llm` interface; factory `getRater()` (Claude-or-fake);
-  defensive JSON parsing; 9 offline tests. **Live auth confirmed but the Anthropic account has
-  0 API credits** — the live rating call is pending credits (or a swap to a Gemini rater on the
-  existing Google key).
+- ✅ **D13 rating adapter** — shared rating logic (`llm/rating-util.mjs`) with two providers:
+  `llm/claude.mjs` (`claude-haiku-4-5`) and `llm/gemini.mjs` (`gemini-2.5-flash`). Factory
+  `getRater()` order: `ECHOLAYER_RATER` override → Claude (Anthropic key) → Gemini (Google key)
+  → fake. Defensive JSON parsing, index-aligned output; 17 offline tests. **Live-verified via
+  Gemini** (deploy→8/success, failed edit→9/fail, routine read→2/neutral). Claude is built and
+  auto-takes over once the Anthropic account has credits — its key authenticates but currently
+  has 0 credits, so `ECHOLAYER_RATER=gemini` is set to use the working Gemini rater.
 - ⏳ **Capture hooks** — `PostToolUse`/`Stop` stdin wrappers feeding real activity in.
 
 Note: live (768-dim) and fake (10-dim) vectors are incompatible by length; switching embedders

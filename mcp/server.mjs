@@ -53,8 +53,8 @@ export function buildServer(repo, deps) {
       description:
         'Query EchoLayer long-term memory for the current task. Returns a composed bundle: ' +
         'short_term (live buffer), thematic (relevant episodes/insights), and corrective ' +
-        '(failure lessons, capped). Embeddings currently use a local keyword fake, so ' +
-        'relevance is approximate until the live embedder is wired.',
+        '(failure lessons, capped). Uses Google gemini-embedding-001 for semantic relevance ' +
+        'when a key is configured, else falls back to a local keyword approximation.',
       inputSchema: {
         query: z.string().min(1).describe('The current task or question to retrieve memories for'),
         k: z.number().int().positive().optional().describe('Max thematic results (default 8)'),

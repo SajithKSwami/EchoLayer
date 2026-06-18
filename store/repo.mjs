@@ -22,7 +22,8 @@ export function newId(prefix = 'm') {
 
 export function openStore(path = ':memory:') {
   const db = new DatabaseSync(path);
-  db.exec('PRAGMA journal_mode = WAL;');
+  db.exec('PRAGMA journal_mode = WAL;'); // multi-process: MCP server + capture/flush hooks
+  db.exec('PRAGMA busy_timeout = 2000;'); // wait, don't error, under brief write contention
   db.exec(SCHEMA);
 
   const stmts = {

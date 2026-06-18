@@ -20,10 +20,11 @@ Synthesis of four sources (the latter two are the primary papers CoALA generaliz
   reflection; outcome/reward signals that inform salience. Drives §5 and §6.
 
 Status: **all 7 layers implemented and tested on fakes** (50 tests, zero deps, zero API spend).
-The MCP server is built (stdio, `@modelcontextprotocol/sdk`) and the live **embedder** (D14,
-Google `gemini-embedding-001`) is wired and live-verified with a fake fallback. What remains: the
-D13 rating adapter (`claude-haiku-4-5`) and the `PostToolUse`/`Stop` capture hooks. This document
-is the contract; the Decisions Log below records choices made as architect.
+**All wiring complete.** MCP server (stdio), live embedder (D14, Google `gemini-embedding-001`),
+live rater (D13, Gemini `gemini-2.5-flash` now / `claude-haiku-4-5` when Anthropic has credits),
+and the `PostToolUse`/`Stop` capture hooks are all built and live-verified end-to-end. EchoLayer
+captures real Claude activity, rates and embeds it, and serves semantic recall via MCP. This
+document is the contract; the Decisions Log below records choices made as architect.
 
 ---
 
@@ -435,7 +436,11 @@ Build in this order; each is independently testable.
   Gemini** (deploy→8/success, failed edit→9/fail, routine read→2/neutral). Claude is built and
   auto-takes over once the Anthropic account has credits — its key authenticates but currently
   has 0 credits, so `ECHOLAYER_RATER=gemini` is set to use the working Gemini rater.
-- ⏳ **Capture hooks** — `PostToolUse`/`Stop` stdin wrappers feeding real activity in.
+- ✅ **Capture hooks** — `hooks/post-tool-use.mjs` (append-only, hot path, exits 0) and
+  `hooks/stop.mjs` (drains the buffer → rated+embedded episodes at session end). Live-verified
+  end-to-end: 2 tool calls → buffer → Stop-flush → 2 Gemini-rated, live-embedded episodes →
+  recall. Wired project-scoped with an `Edit|Write|Bash|Task` matcher. `busy_timeout` added for
+  multi-process DB access (MCP server + hooks).
 
 Note: live (768-dim) and fake (10-dim) vectors are incompatible by length; switching embedders
 means starting a fresh DB. The server skips demo-seeding in live mode for this reason.

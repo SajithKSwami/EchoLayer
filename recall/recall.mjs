@@ -22,6 +22,7 @@ export async function recall(repo, { embedder }, queryText, opts = {}) {
     { ...CONFIG.retrieval, ...(opts.retrieval ?? {}) },
   );
 
-  repo.bumpAccessed(bundle.touched, now.toISOString());
+  // Bump recency on surfaced memories — unless a read-only caller opts out (e.g. benchmarks).
+  if (opts.touch !== false) repo.bumpAccessed(bundle.touched, now.toISOString());
   return bundle;
 }

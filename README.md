@@ -14,10 +14,28 @@ It is a synthesis of four works:
 
 > Full design and decisions log: **[ARCHITECTURE.md](ARCHITECTURE.md)**
 
+## Does it actually help?
+
+Measured, not asserted. EchoLayer's whole job is to deliver the *relevant* past context to a new
+session cheaply. The [benchmark](bench/) pits it against the two things an agent does without
+memory — dump all history, or dump recent history — at an equal context budget:
+
+| Strategy | Tokens / query | Relevant memory retrieved |
+|---|---:|---:|
+| Dump all history | 399 | 100% |
+| Dump recent 8 | 131 | 40% |
+| **EchoLayer recall (K=8)** | **138** | **100%** |
+
+**Same accuracy as full history at 65% fewer tokens** — and **100% vs 40%** against recency-only
+at the same budget, because recency alone is blind to older memories. Live `gemini-embedding-001`,
+24-episode corpus, 10 labeled queries. Reproduce: `node bench/run.mjs`. Scope and honest limits in
+[bench/README.md](bench/README.md).
+
 ## Status
 
-**All 7 layers implemented and tested** — 50 tests, **zero dependencies**, zero API cost
-(cognition is exercised with injected fakes).
+**Complete and live** — all 7 layers + MCP server + live embedder + live rater + autonomous
+capture/reflect hooks. **87 tests**, zero-dependency core (`node:sqlite`); cognition is fully
+testable with injected fakes (zero API cost in CI).
 
 | Layer | Module | Responsibility |
 |-------|--------|----------------|
@@ -31,9 +49,10 @@ It is a synthesis of four works:
 
 Try it: `node recall/cli.mjs "deploy error"`
 
-The **MCP server is built** and the **live embedder is wired and verified** (Google
-`gemini-embedding-001`, with automatic fake fallback when no key is set). Remaining: the
-`claude-haiku-4-5` rating adapter and the `PostToolUse`/`Stop` capture hooks.
+Everything is wired: an MCP server (`echolayer_recall` / `remember` / `stats`), live embeddings
+(Google `gemini-embedding-001`), live rating (Gemini `gemini-2.5-flash`, or `claude-haiku-4-5`
+with an Anthropic key), and `PostToolUse`/`Stop` hooks that capture, rate, embed, and reflect on
+real activity automatically — each with a fake fallback when no key is set.
 
 ### Enable real semantic recall
 

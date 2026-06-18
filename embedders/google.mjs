@@ -1,10 +1,14 @@
-// Live embedder adapter (D14) — Google text-embedding-004 (768-dim).
+// Live embedder adapter (D14) — Google gemini-embedding-001 (3072-dim).
 // Implements the injected embedder interface: embedBatch(texts, { taskType }) -> number[][].
 // The underlying client is injectable so the mapping logic is unit-testable offline.
+//
+// Model note: verified against a live key — text-embedding-004 is not available on the current
+// Gemini API surface (404); gemini-embedding-001 is the GA embedding model and supports the
+// synchronous batchEmbedContents call.
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const GOOGLE_EMBED_MODEL = 'text-embedding-004';
+export const GOOGLE_EMBED_MODEL = 'gemini-embedding-001';
 
 export function createGoogleEmbedder({
   apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY,

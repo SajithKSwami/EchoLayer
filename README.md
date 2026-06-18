@@ -31,9 +31,9 @@ It is a synthesis of four works:
 
 Try it: `node recall/cli.mjs "deploy error"`
 
-The **MCP server is built** and the **live embedder is wired** (Google `text-embedding-004`,
-with automatic fake fallback when no key is set). Remaining: the `claude-haiku-4-5` rating
-adapter and the `PostToolUse`/`Stop` capture hooks.
+The **MCP server is built** and the **live embedder is wired and verified** (Google
+`gemini-embedding-001`, with automatic fake fallback when no key is set). Remaining: the
+`claude-haiku-4-5` rating adapter and the `PostToolUse`/`Stop` capture hooks.
 
 ### Enable real semantic recall
 
@@ -44,9 +44,9 @@ recall, copy `.env.example` to `.env` and set a key:
 cp .env.example .env      # then edit: GOOGLE_API_KEY=...   (https://aistudio.google.com/apikey)
 ```
 
-The server auto-detects the key at startup and switches to `text-embedding-004`. Live (768-dim)
-and fake (10-dim) vectors are incompatible, so **start a fresh DB when switching** (delete
-`echolayer.db`).
+The server auto-detects the key at startup and switches to `gemini-embedding-001`. Live
+(3072-dim) and fake (10-dim) vectors are incompatible, so **start a fresh DB when switching**
+(delete `echolayer.db`).
 
 ## Use in Claude Code
 

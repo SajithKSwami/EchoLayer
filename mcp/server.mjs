@@ -138,7 +138,7 @@ async function main() {
   const server = buildServer(repo, { embedder });
   await server.connect(new StdioServerTransport());
   process.stderr.write(
-    `echolayer-mcp-server ready (db: ${DB_PATH}; embedder: ${live ? 'google text-embedding-004' : 'fake keyword'} — ${why})\n`,
+    `echolayer-mcp-server ready (db: ${DB_PATH}; embedder: ${live ? 'google gemini-embedding-001' : 'fake keyword'} — ${why})\n`,
   );
 }
 

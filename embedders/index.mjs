@@ -17,7 +17,7 @@ export function getEmbedder(env = process.env) {
     return { embedder: keywordEmbedder, live: false, why: 'no GOOGLE_API_KEY / GEMINI_API_KEY' };
   }
   try {
-    return { embedder: createGoogleEmbedder({ apiKey: key }), live: true, why: 'google text-embedding-004' };
+    return { embedder: createGoogleEmbedder({ apiKey: key }), live: true, why: 'google gemini-embedding-001' };
   } catch (e) {
     return { embedder: keywordEmbedder, live: false, why: `google init failed: ${e.message}` };
   }

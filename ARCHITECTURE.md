@@ -21,9 +21,9 @@ Synthesis of four sources (the latter two are the primary papers CoALA generaliz
 
 Status: **all 7 layers implemented and tested on fakes** (50 tests, zero deps, zero API spend).
 The MCP server is built (stdio, `@modelcontextprotocol/sdk`) and the live **embedder** (D14,
-Google `text-embedding-004`) is wired with a fake fallback. What remains: the D13 rating adapter
-(`claude-haiku-4-5`) and the `PostToolUse`/`Stop` capture hooks. This document is the contract;
-the Decisions Log below records choices made as architect.
+Google `gemini-embedding-001`) is wired and live-verified with a fake fallback. What remains: the
+D13 rating adapter (`claude-haiku-4-5`) and the `PostToolUse`/`Stop` capture hooks. This document
+is the contract; the Decisions Log below records choices made as architect.
 
 ---
 
@@ -47,7 +47,7 @@ Resolved as architect (B-path chosen; see §11). These are now defaults in
 | D11 | Prune floor / age | importance < 3 **and** age > 30 d **and** never re-accessed | Forgetting; reflections always retained. |
 | D12 | Capture scope | all tools (denylist configurable, default empty) | Honors "every tool call"; knob exists if volume bites. |
 | D13 | Rating/NL model | **`claude-haiku-4-5`** (batched at flush) | Cheap, fast; batched once per page (§7). Behind an injected `llm` interface. |
-| D14 | Embeddings | **Google `text-embedding-004`** | `@google/generative-ai` + key already in repo deps — no new dependency. Behind an injected `embedder` interface so it's swappable (Voyage/OpenAI) without touching flush logic. |
+| D14 | Embeddings | **Google `gemini-embedding-001`** (3072-dim) | `@google/generative-ai`. text-embedding-004 turned out 404 on the live key; gemini-embedding-001 is the GA model. Behind an injected `embedder` interface so it's swappable (Voyage/OpenAI) without touching flush logic. |
 
 **Dependency-injection rule:** `flush/` and `reflect/` take `{ llm, embedder }` as parameters.
 Core orchestration is tested with fakes; live adapters (D13/D14) are thin and swappable. No
@@ -422,11 +422,12 @@ Build in this order; each is independently testable.
 
 **Live wiring — embedder DONE, rating + hooks remain.**
 
-- ✅ **D14 embedder** — `embedders/google.mjs` (`text-embedding-004`, 768-dim) behind the
+- ✅ **D14 embedder** — `embedders/google.mjs` (`gemini-embedding-001`, 3072-dim) behind the
   injected interface, with a query/document `taskType` split and a fake fallback when no key is
   set (`embedders/index.mjs`). 8 offline tests via an injected client. The MCP server selects
   live-vs-fake at startup and loads a repo-local `.env` (Node built-in `loadEnvFile`, no dotenv
-  dep). **Live API call not yet exercised** — requires a `GOOGLE_API_KEY` in `.env`.
+  dep). **Live-verified** against a real key: 3072-dim vectors, semantic ranking confirmed
+  (query "deployment failure" → 0.79 vs 0.57 to an unrelated memory).
 - ⏳ **D13 rating adapter** — `claude-haiku-4-5` for flush importance/NL/outcome (confirm the
   model id against the claude-api reference before hardcoding).
 - ⏳ **Capture hooks** — `PostToolUse`/`Stop` stdin wrappers feeding real activity in.
